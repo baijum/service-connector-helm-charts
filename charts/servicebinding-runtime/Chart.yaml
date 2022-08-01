@@ -1,0 +1,106 @@
+apiVersion: v2
+name: servicebinding-runtime
+description: The reference implementation of the Service Binding Specification for Kubernetes
+icon: https://avatars.githubusercontent.com/u/64096231
+
+# A chart can be either an 'application' or a 'library' chart.
+#
+# Application charts are a collection of templates that can be packaged into versioned archives
+# to be deployed.
+#
+# Library charts provide useful utilities or functions for the chart developer. They're included as
+# a dependency of application charts to inject those utilities and functions into the rendering
+# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+version: 0.0.1
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
+appVersion: "0.1.0_1"
+
+keywords:
+  - service-binding
+  - service
+  - backing-service
+  - provisioned-service
+  - application
+  - operator
+
+annotations:
+  artifacthub.io/changes: |
+    - Initial release
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/images: |
+    - name: servicebinding-runtime
+      image: ghcr.io/service-connector/servicebinding-runtime:0.1.0_1
+      whitelisted: true
+  artifacthub.io/crds: |
+    - kind: ServiceBinding
+      version: v1beta1
+      name: servicebindings.servicebinding.io
+      displayName: Service Binding
+      description: Desired state of bindings for application connectivity with service
+    - kind: ClusterWorkloadResourceMapping
+      version: v1beta1
+      name: clusterworkloadresourcemappings.servicebinding.io
+      displayName: Cluster Workload Resource Mapping
+      description: Desired state of mapping defined cluster wide for non PodSpec-able workload resources
+  artifacthub.io/crdsExamples: |
+    - apiVersion: servicebinding.io/v1beta1
+      kind: ServiceBinding
+      metadata:
+        name: account-service
+      spec:
+        service:
+          apiVersion: com.example/v1alpha1
+          kind: AccountService
+          name: prod-account-service
+        workload:
+          apiVersion: apps/v1
+          kind: Deployment
+          name: online-banking
+      status:
+        conditions:
+        - type: Ready
+          status: 'True'
+          reason: 'Projected'
+          message: ''
+          lastTransitionTime: '2021-01-20T17:00:00Z'
+    - apiVersion: servicebinding.io/v1beta1
+      kind: ClusterWorkloadResourceMapping
+      metadata:
+        name: cronjobs.batch
+      spec:
+        versions:
+        - version: "*"
+          annotations: .spec.jobTemplate.spec.template.metadata.annotations
+          containers:
+          - path: .spec.jobTemplate.spec.template.spec.containers[*]
+            name: .name
+            env: .env # this is the default value
+            volumeMounts: .volumeMounts # this is the default value
+          - path: .spec.jobTemplate.spec.template.spec.initContainers[*]
+            name: .name
+            env: .env # this is the default value
+            volumeMounts: .volumeMounts # this is the default value
+          volumes: .spec.jobTemplate.spec.template.spec.volumes
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/links: |
+    - name: Spec Website
+      url: https://servicebinding.io
+    - name: Runtime Git Repo
+      url: https://github.com/servicebinding/runtime
+    - name: Charts Git Repo
+      url: https://github.com/service-connector/helm-charts
+  artifacthub.io/maintainers: |
+    - name: "Baiju Muthukadan"
+      email: baiju.m.mail@gmail.com
+  artifacthub.io/operator: "true"
+  artifacthub.io/operatorCapabilities: Seamless Upgrades
+  artifacthub.io/prerelease: "true"

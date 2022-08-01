@@ -1,0 +1,20 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "servicebinding-runtime.fullname" . }}-selfsigned-issuer
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "servicebinding-runtime.fullname" . }}-serving-cert
+spec:
+  # $(SERVICE_NAME) and $(NAMESPACE) will be substituted by kustomize
+  dnsNames:
+  - {{ include "servicebinding-runtime.fullname" . }}.{{ .Release.Namespace }}.svc
+  - {{ include "servicebinding-runtime.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: {{ include "servicebinding-runtime.fullname" . }}-selfsigned-issuer
+  secretName: {{ include "servicebinding-runtime.fullname" . }}-webhook-server-cert
