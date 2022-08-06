@@ -1,0 +1,114 @@
+apiVersion: v2
+name: carvel-secretgen-controller
+description: A Helm chart for Kubernetes
+icon: https://github.com/vmware-tanzu/carvel-kapp/raw/develop/docs/CarvelLogo.png
+
+# A chart can be either an 'application' or a 'library' chart.
+#
+# Application charts are a collection of templates that can be packaged into versioned archives
+# to be deployed.
+#
+# Library charts provide useful utilities or functions for the chart developer. They're included as
+# a dependency of application charts to inject those utilities and functions into the rendering
+# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+version: 0.0.1
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
+appVersion: "0.10.3_1"
+
+keywords:
+  - service-binding
+  - service
+  - backing-service
+  - provisioned-service
+  - operator
+
+annotations:
+  artifacthub.io/changes: |
+    - Initial release
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/images: |
+    - name: servicebinding-runtime
+      image: ghcr.io/service-connector/carvel-secretgen-controller/secretgen:0.10.3_1
+      whitelisted: true
+  artifacthub.io/crds: |
+    - kind: ServiceBinding
+      version: v1beta1
+      name: servicebindings.servicebinding.io
+      displayName: Service Binding
+      description: Desired state of bindings for application connectivity with service
+    - kind: ClusterWorkloadResourceMapping
+      version: v1beta1
+      name: clusterworkloadresourcemappings.servicebinding.io
+      displayName: Cluster Workload Resource Mapping
+      description: Desired state of mapping defined cluster wide for non PodSpec-able workload resources
+  artifacthub.io/crdsExamples: |
+    - apiVersion: secretgen.carvel.dev/v1alpha1
+      kind: SecretTemplate
+      metadata:
+        name: rds-bindable
+        namespace: default
+      spec:
+        serviceAccountName: rds-resources-reader
+        inputResources:
+        - name: rds
+          ref:
+            apiVersion: rds.services.k8s.aws/v1alpha1
+            kind: DBInstance
+            name: rds-psql-1
+        - name: creds
+          ref:
+            apiVersion: v1
+            kind: Secret
+            name: "$(.rds.spec.masterUserPassword.name)"
+        template:
+          metadata:
+            labels:
+              app.kubernetes.io/component: rds-postgres
+              app.kubernetes.io/instance: "$(.rds.metadata.name)"
+              services.apps.tanzu.vmware.com/class: rds-postgres
+          type: postgresql
+          stringData:
+            type: postgresql
+            port: "$(.rds.status.endpoint.port)"
+            database: "$(.rds.spec.dbName)"
+            host: "$(.rds.status.endpoint.address)"
+            username: "$(.rds.spec.masterUsername)"
+          data:
+            password: "$(.creds.data.password)"
+    - apiVersion: secretgen.carvel.dev/v1alpha1
+      kind: SecretExport
+      metadata:
+        name: registry1-creds
+        namespace: user1-global
+      spec:
+        toNamespaces:
+        - user2
+        - user3
+    - apiVersion: secretgen.carvel.dev/v1alpha1
+      kind: SecretImport
+      metadata:
+        name: user-password
+        namespace: user2
+      spec:
+        fromNamespace: user1
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/links: |
+    - name: Carvel SecretGen Controller Git Repo
+      url: https://github.com/vmware-tanzu/carvel-secretgen-controller
+    - name: Charts Git Repo
+      url: https://github.com/service-connector/helm-charts
+  artifacthub.io/maintainers: |
+    - name: "Baiju Muthukadan"
+      email: baiju.m.mail@gmail.com
+  artifacthub.io/operator: "true"
+  artifacthub.io/operatorCapabilities: Seamless Upgrades
+  artifacthub.io/prerelease: "true"
